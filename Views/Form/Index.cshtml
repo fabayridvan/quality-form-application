@@ -120,52 +120,69 @@
 
 <script>
     function listeleForm() {
+        var category1Id = $('#category1Select').val();
+        var category2Id = $('#category2Select').val();
+        var category3Id = $('#category3Select').val();
 
-            var category1Id = $('#category1Select').val();
-            var category2Id = $('#category2Select').val();
-            var category3Id = $('#category3Select').val();
+        $.ajax({
+            url: '@Url.Action("GetQuestionData", "Form")',
+            type: 'GET',
+            data: {
+                category1Id: category1Id,
+                category2Id: category2Id,
+                category3Id: category3Id
+            },
+            success: function (questions) {
+                console.log(questions); // Gelen veriyi konsolda inceleyin
 
-            $.ajax({
-                url: '@Url.Action("GetQuestionData", "Form")',
-                type: 'GET',
-                data: {
-                    category1Id: category1Id,
-                    category2Id: category2Id,
-                    category3Id: category3Id
-                },
-                success: function (questions) {
-                    console.log(questions); // Gelen veriyi konsolda inceleyin
+                var list = $('#questionList ul');
+                list.empty(); // Mevcut listeyi temizle
+                $.each(questions, function (index, question) {
+                    var li = $('<li>').css({ 'list-style-type': 'none' }); // List item for each question
 
-                    var list = $('#questionList ul');
-                    list.empty(); // Mevcut listeyi temizle
-                    console.log(list);
-                    $.each(questions, function (index, question) {
-                        var li = $('<li>');
-                        li.append(document.createTextNode(question.question_Text));
-                        li.append($('<br>'));
-                        // Radyo butonları ekle
-                    var radioAccept = $('<input>', { type: 'radio', name: question.id, value: 'accept',  required: true });
-                    var radioReject = $('<input>', { type: 'radio', name: question.id, value: 'reject',  css: { marginLeft: '10px' } });
-
-
-                        li.append(radioAccept);
-
-                        li.append($('<label>').text('Kabul').css('color', 'green'));
-
-                        li.append(radioReject);
-                        li.append($('<label>').text('Red').css('color', 'red'));
-                        li.append($('<br>'));
-                        li.append($('<br>'));
-                        list.append(li);
+                    var flexContainer = $('<div>').css({
+                        display: 'flex',
+                        alignItems: 'center',
+                        marginBottom: '10px' // Add some space between the questions
                     });
 
-                    $('#questionList').show(); // Soru listesini göster
-                },
-                error: function (xhr, status, error) {
-                    console.error("Hata:", error);
-                }
-            });
-        }
+                    var radioAccept = $('<input>', {
+                        type: 'radio',
+                        name: question.id,
+                        value: 'accept',
+                        required: true
+                    });
+
+                    var labelAccept = $('<label>')
+                        .text('Kabul')
+                        .addClass('label-green')
+                        .css({ 'marginLeft': '5px' });
+
+                    var radioReject = $('<input>', {
+                        type: 'radio',
+                        name: question.id,
+                        value: 'reject'
+                    });
+
+                    var labelReject = $('<label>')
+                        .text('Red')
+                        .addClass('label-red')
+                        .css({ 'marginLeft': '10px' });
+
+                    flexContainer.append(radioAccept, labelAccept, radioReject, labelReject);
+                    li.append(document.createTextNode(question.question_Text));
+                    li.append(flexContainer); // Append the flex container to the list item
+                    list.append(li); // Append the list item to the list
+                });
+
+                $('#questionList').show(); // Soru listesini göster
+            },
+            error: function (xhr, status, error) {
+                console.error("Hata:", error);
+            }
+        });
+    }
+
 </script>
 
 <script>

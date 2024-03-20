@@ -22,6 +22,7 @@ namespace QuailtyForm.Controllers
         public IActionResult Index()
         {
             var connectionString = _configuration.GetConnectionString("OracleDbConnection");
+           
             OracleDataAccess da = new OracleDataAccess(connectionString);
 
             var project1List = da.GetCompany();
