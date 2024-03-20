@@ -129,10 +129,15 @@ h1, h3 {
     .dark-mode .question-list {
         background-color: #333333; /* Form için koyu arka plan */
     }
-/* Diğer dark mode stillerini buraya ekleyebilirsiniz */
-
-/* Dark Mode Butonu */
-.dark-mode-button {
+    .dark-mode .select2-dropdown {
+        background-color: white;
+    }
+    .dark-mode .select2-container--default .select2-selection--single {
+        background-color: black;
+    }
+    /* Diğer dark mode stillerini buraya ekleyebilirsiniz */
+    /* Dark Mode Butonu */
+    .dark-mode-button {
     background-color: #333333;
     color: white;
     padding: 10px 20px;

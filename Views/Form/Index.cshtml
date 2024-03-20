@@ -1,26 +1,28 @@
 ﻿@model QuailtyForm.ViewModels.ComplexFormViewModel
 
 <head>
-
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <!-- Önce jQuery -->
-    <script src="https://code.jquery.com/jquery-3.x.x.min.js"></script>
-
-    <!-- Sonra Bootstrap JS -->
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.x.x/js/bootstrap.min.js"></script>
-
-
-    <!-- Select2 CSS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
-
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <!-- my css-->
     <link href="~/css/my.css" rel="stylesheet" />
     <link href="~/css/switch.css" rel="stylesheet" />
-   
+    <link href="~/css/select.css" rel="stylesheet" />
+
+    <!-- İlk olarak jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <!-- Sonra Select2 JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.8/js/select2.min.js" defer></script>
+
+    <!-- Select2 CSS -->
+@*     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+ *@
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.x.x/js/bootstrap.min.js"></script>
+
+@*     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+ *@    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
 
 
   
@@ -381,3 +383,14 @@
 
 </script>
 
+<script>
+    $(document).ready(function () {
+        // $('#mySelect').select2();
+        $('#company1Select').select2();
+        $('#project1Select').select2();
+        $('#category1Select').select2();
+        $('#category2Select').select2();
+        $('#category3Select').select2();
+        $('#categorySelect').select2();
+    });
+</script>
