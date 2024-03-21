@@ -110,12 +110,12 @@ namespace QuailtyForm.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetQuestionData(int category1Id, int category2Id, int category3Id)
+        public IActionResult GetQuestionData(int category1Id, int category2Id, int category3Id, int category4Id)
         {
             var connectionString = _configuration.GetConnectionString("OracleDbConnection");
             OracleDataAccess da = new OracleDataAccess(connectionString);
 
-            var questions3Data = da.GetQuestion(category1Id, category2Id, category3Id);
+            var questions3Data = da.GetQuestion(category1Id, category2Id, category3Id, category4Id);
             return Json(questions3Data);
         }
 

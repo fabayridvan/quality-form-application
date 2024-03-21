@@ -30,5 +30,6 @@
         public int Categori1Id { get; set; }
         public int Categori2Id { get; set; }
         public int Categori3Id { get; set; }
+        public int Categori4Id { get; set; }
     }
 }

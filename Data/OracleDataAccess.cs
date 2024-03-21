@@ -237,18 +237,19 @@ namespace QuailtyForm.Data
             }
             return category;
         }
-        public List<Question> GetQuestion(int category1Id, int category2Id, int category3Id)
+        public List<Question> GetQuestion(int category1Id, int category2Id, int category3Id, int category4Id)
         {
             List<Question> questions = new List<Question>();
 
             using (OracleConnection con = new OracleConnection(ConnectionString))
             {
                 con.Open();
-                string query = "SELECT CSQ.SURVEY_QUESTION_ID,QUESTION,ZZ_CATEGORIES_ID,ZZ_CATEGORIES_ID2,ZZ_CATEGORIES_ID3 FROM CRMD_SURVEY CS LEFT JOIN CRMD_SURVEY_QUESTION    CSQ  ON  CS.SURVEY_ID=CSQ.SURVEY_ID LEFT JOIN CRMD_SURVEY_QUESTION_D  CSQD    ON   CSQD.SURVEY_QUESTION_ID=CSQ.SURVEY_QUESTION_ID where ZZ_CATEGORIES_ID = :category1Id AND ZZ_CATEGORIES_ID2 = :category2Id AND ZZ_CATEGORIES_ID3 = :category3Id";
+                string query = "SELECT CSQ.SURVEY_QUESTION_ID,QUESTION,ZZ_CATEGORIES_ID,ZZ_CATEGORIES_ID2,ZZ_CATEGORIES_ID3,ZZ_CATEGORIES_ID4 FROM CRMD_SURVEY CS LEFT JOIN CRMD_SURVEY_QUESTION    CSQ  ON  CS.SURVEY_ID=CSQ.SURVEY_ID LEFT JOIN CRMD_SURVEY_QUESTION_D  CSQD    ON   CSQD.SURVEY_QUESTION_ID=CSQ.SURVEY_QUESTION_ID where ZZ_CATEGORIES_ID = :category1Id AND ZZ_CATEGORIES_ID2 = :category2Id AND ZZ_CATEGORIES_ID3 = :category3Id AND ZZ_CATEGORIES_ID4 = :category4Id";
                 OracleCommand cmd = new OracleCommand(query, con);
                 cmd.Parameters.Add(new OracleParameter("category1Id", category1Id));
                 cmd.Parameters.Add(new OracleParameter("category2Id", category2Id));
                 cmd.Parameters.Add(new OracleParameter("category3Id", category3Id));
+                cmd.Parameters.Add(new OracleParameter("category4Id", category4Id));
 
                 using (OracleDataReader reader = cmd.ExecuteReader())
                 {
@@ -260,7 +261,8 @@ namespace QuailtyForm.Data
                             Question_Text = reader["QUESTION"].ToString(),
                             Categori1Id = Convert.ToInt32(reader["ZZ_CATEGORIES_ID"]),
                             Categori2Id = Convert.ToInt32(reader["ZZ_CATEGORIES_ID2"]),
-                            Categori3Id = Convert.ToInt32(reader["ZZ_CATEGORIES_ID3"])
+                            Categori3Id = Convert.ToInt32(reader["ZZ_CATEGORIES_ID3"]),
+                            Categori4Id = Convert.ToInt32(reader["ZZ_CATEGORIES_ID4"])
                         });
                     }
                 }

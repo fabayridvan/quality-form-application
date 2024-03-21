@@ -125,6 +125,7 @@
         var category1Id = $('#category1Select').val();
         var category2Id = $('#category2Select').val();
         var category3Id = $('#category3Select').val();
+        var category4Id = $('#category4Select').val();
 
         $.ajax({
             url: '@Url.Action("GetQuestionData", "Form")',
@@ -132,7 +133,8 @@
             data: {
                 category1Id: category1Id,
                 category2Id: category2Id,
-                category3Id: category3Id
+                category3Id: category3Id,
+                category4Id: category4Id
             },
             success: function (questions) {
                 console.log(questions); // Gelen veriyi konsolda inceleyin
