@@ -14,7 +14,6 @@ namespace QuailtyForm.Controllers
     public class FormController : Controller
     {
         private readonly IConfiguration _configuration;
-
         public FormController(IConfiguration configuration)
         {
             _configuration = configuration;
@@ -22,7 +21,7 @@ namespace QuailtyForm.Controllers
         public IActionResult Index()
         {
             var connectionString = _configuration.GetConnectionString("OracleDbConnection");
-           
+
             OracleDataAccess da = new OracleDataAccess(connectionString);
 
             var project1List = da.GetCompany();
@@ -45,7 +44,7 @@ namespace QuailtyForm.Controllers
                 Categories1 = da.GetCategory1(),
                 Categories2 = da.GetCategory2(selectedParentId),
                 Categories3 = da.GetCategory3(selectedParentId2),
-                Categories4 = da.GetCategory4()
+                Categories4 = da.GetCategory4(selectedParentId3)
             };
 
             return View(viewModel);
@@ -64,16 +63,16 @@ namespace QuailtyForm.Controllers
             var category2List = da.GetCategory2(selectedParentId);
             int selectedParentId2 = category2List.FirstOrDefault()?.Id ?? 0;
             var category3List = da.GetCategory3(selectedParentId2);
-            //int selectedParentId3 = category3List.FirstOrDefault()?.Id ?? 0;
-            //var category4List = da.GetCategory4(selectedParentId3);
+            int selectedParentId3 = category3List.FirstOrDefault()?.Id ?? 0;
+            var category4List = da.GetCategory4(selectedParentId3);
 
             var viewModel = new ComplexFormViewModel
             {
 
                 Categories1 = category1List,
                 Categories2 = category2List,
-                Categories3 = category3List
-                //Categories4 = category4List
+                Categories3 = category3List,
+                Categories4 = category4List
             };
 
             return View(viewModel); // ViewModel'i View'a gönder
@@ -98,6 +97,16 @@ namespace QuailtyForm.Controllers
 
             var category3Data = da.GetCategory3(parentId);
             return Json(category3Data);
+        }
+
+        [HttpGet]
+        public IActionResult GetCategory4Data(int parentId)
+        {
+            var connectionString = _configuration.GetConnectionString("OracleDbConnection");
+            OracleDataAccess da = new OracleDataAccess(connectionString);
+
+            var category4Data = da.GetCategory4(parentId);
+            return Json(category4Data);
         }
 
         [HttpGet]
@@ -149,9 +158,9 @@ namespace QuailtyForm.Controllers
             catch (Exception ex)
             {
 
-                return Json(new { success = false, message = "Anket kaydedilmedi." +"Hata Mesajı:"+ ex });
+                return Json(new { success = false, message = "Anket kaydedilmedi." + "Hata Mesajı:" + ex });
             }
-          
+
         }
 
         // GET: Anket/Basarili
@@ -159,22 +168,6 @@ namespace QuailtyForm.Controllers
         {
             return View(); // Başarılı işlem sonrası görüntülenecek view
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

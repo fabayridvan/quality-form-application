@@ -84,7 +84,7 @@
 
                 <div>
                     <h3>İmalat Adı</h3>
-                    <select id="categorySelect" asp-items="@(new SelectList(Model.Categories4, "Id", "Description"))">
+                    <select id="category4Select" asp-items="@(new SelectList(Model.Categories4, "Id", "Description"))">
                         <option value="">Kaydı seçiniz...</option>
                     </select>
                 </div>
@@ -234,7 +234,28 @@
                 }
             });
         });
+        // Category3 değişikliğinde Category4'ü güncelle
+        $('#category3Select').change(function () {
+            var selectedCategoryId = $(this).val();
 
+            $.ajax({
+                url: '@Url.Action("GetCategory4Data", "Form")',
+                type: 'GET',
+                data: { parentId: selectedCategoryId },
+                success: function (data) {
+                    var category4Select = $('#category4Select');
+                    category4Select.empty();
+                    category4Select.append($('<option>', { value: '', text: 'Kaydı seçiniz...' }));
+
+                    $.each(data, function (index, item) {
+                        category4Select.append($('<option>', {
+                            value: item.id,
+                            text: item.description
+                        }));
+                    });
+                }
+            });
+        });
         // Kalite Kontrol Forma göre Kat Blok Seçme
         $('#company1Select').change(function () {
             var selectedProjectId = $(this).val();
@@ -391,6 +412,6 @@
         $('#category1Select').select2();
         $('#category2Select').select2();
         $('#category3Select').select2();
-        $('#categorySelect').select2();
+        $('#category4Select').select2();
     });
 </script>
