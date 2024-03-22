@@ -15,7 +15,7 @@ namespace QuailtyForm.Data
         {
             ConnectionString = connectionString;
         }
-  
+
         public void ExecuteQuery(string query, OracleParameter[] parameters)
         {
             using (OracleConnection connection = new OracleConnection(ConnectionString))
@@ -42,13 +42,21 @@ namespace QuailtyForm.Data
             using (OracleConnection con = new OracleConnection(ConnectionString))
             {
                 con.Open();
-                string query = string.Format(@"SELECT QC.QUALITY_CONTROL_DEF_ID,
-                                               QC.QUALITY_CONTROL_NAME,
-                                               QC.SURVEY_ID,
-                                               QCD.PROJECT_BLOCK_DEF_ID
-                                          FROM ZZZT_QUALITY_CONTROL_DEF  QC
-                                               LEFT JOIN ZZZT_QUALITY_CONTROL_DEF_D QCD
-                                                   ON QC.QUALITY_CONTROL_DEF_ID = QCD.QUALITY_CONTROL_DEF_ID");
+                string query = string.Format(@"SELECT DISTINCT
+                                                   QC.QUALITY_CONTROL_DEF_ID,
+                                                   QC.QUALITY_CONTROL_NAME,
+                                                   QC.SURVEY_ID
+                                              FROM ZZZT_QUALITY_CONTROL_DEF  QC
+                                                   LEFT JOIN ZZZT_QUALITY_CONTROL_DEF_D QCD
+                                                       ON QC.QUALITY_CONTROL_DEF_ID = QCD.QUALITY_CONTROL_DEF_ID");
+                //string query = string.Format(@"SELECT QC.QUALITY_CONTROL_DEF_ID,
+                //                               QC.QUALITY_CONTROL_NAME,
+                //                               QC.SURVEY_ID,
+                //                               QCD.PROJECT_BLOCK_DEF_ID
+                //                          FROM ZZZT_QUALITY_CONTROL_DEF  QC
+                //                               LEFT JOIN ZZZT_QUALITY_CONTROL_DEF_D QCD
+                //                                   ON QC.QUALITY_CONTROL_DEF_ID = QCD.QUALITY_CONTROL_DEF_ID");
+
                 //OracleCommand cmd = new OracleCommand("SELECT QC.QUALITY_CONTROL_DEF_ID,QC.QUALITY_CONTROL_NAME,QC.SURVEY_ID,QCD.PROJECT_BLOCK_DEF_ID FROM ZZZT_QUALITY_CONTROL_DEF QC LEFT JOIN ZZZT_QUALITY_CONTROL_DEF_D  QCD ON QC.QUALITY_CONTROL_DEF_ID = QCD.QUALITY_CONTROL_DEF_ID", con);
                 OracleCommand cmd = new OracleCommand(query, con);
                 cmd.CommandType = CommandType.Text;
@@ -60,8 +68,8 @@ namespace QuailtyForm.Data
                     {
                         Id = Convert.ToInt32(reader["QUALITY_CONTROL_DEF_ID"]),
                         ControlName = reader["QUALITY_CONTROL_NAME"].ToString(),
-                        SurveyId = Convert.ToInt32(reader["SURVEY_ID"]),
-                        ProjectBlockDefId = Convert.ToInt32(reader["PROJECT_BLOCK_DEF_ID"])
+                        SurveyId = Convert.ToInt32(reader["SURVEY_ID"])
+                        //ProjectBlockDefId = Convert.ToInt32(reader["PROJECT_BLOCK_DEF_ID"])
                     });
                 }
             }
@@ -69,25 +77,44 @@ namespace QuailtyForm.Data
             return company;
         }
 
-        public List<Project> GetProject(int projectBlockDef)
+        public List<Project> GetProject(int qualityControlDefId)
         {
             List<Project> project = new List<Project>();
 
             using (OracleConnection con = new OracleConnection(ConnectionString))
             {
+
                 con.Open();
+
                 string query = string.Format(@"SELECT T.BLOCK_CODE,
-                                            D.FLOOR_CODE,
-                                            T.PROJECT_BLOCK_DEF_ID,
-                                            D.PROJECT_BLOCK_DEF_D_ID
-                                       FROM ZZZT_PROJECT_BLOCK_DEF  T
-                                            LEFT JOIN ZZZT_PROJECT_BLOCK_DEF_D D
-                                                ON D.PROJECT_BLOCK_DEF_ID = T.PROJECT_BLOCK_DEF_ID
-                                      WHERE T.PROJECT_BLOCK_DEF_ID = :projectBlockDefId", con);
+                                                     D.FLOOR_CODE,
+                                                     T.PROJECT_BLOCK_DEF_ID,
+                                                     D.PROJECT_BLOCK_DEF_D_ID
+                                                FROM ZZZT_PROJECT_BLOCK_DEF T
+                                                     LEFT JOIN ZZZT_PROJECT_BLOCK_DEF_D D
+                                                         ON D.PROJECT_BLOCK_DEF_ID = T.PROJECT_BLOCK_DEF_ID
+                                                     LEFT JOIN ZZZT_QUALITY_CONTROL_DEF_D QCD
+                                                         ON T.PROJECT_BLOCK_DEF_ID = QCD.PROJECT_BLOCK_DEF_ID
+                                                     LEFT JOIN ZZZT_QUALITY_CONTROL_DEF QC
+                                                         ON QC.QUALITY_CONTROL_DEF_ID = QCD.QUALITY_CONTROL_DEF_ID
+                                               WHERE QC.QUALITY_CONTROL_DEF_ID = :qualityControlDefId
+                                            ORDER BY BLOCK_CODE", con);
+
+                //string query = string.Format(@"SELECT T.BLOCK_CODE,
+                //                            D.FLOOR_CODE,
+                //                            T.PROJECT_BLOCK_DEF_ID,
+                //                            D.PROJECT_BLOCK_DEF_D_ID
+                //                       FROM ZZZT_PROJECT_BLOCK_DEF  T
+                //                            LEFT JOIN ZZZT_PROJECT_BLOCK_DEF_D D
+                //                                ON D.PROJECT_BLOCK_DEF_ID = T.PROJECT_BLOCK_DEF_ID
+                //                      WHERE T.PROJECT_BLOCK_DEF_ID = :projectBlockDefId", con);
+
+
+
                 //OracleCommand cmd = new OracleCommand("SELECT T.BLOCK_CODE,D.FLOOR_CODE,T.PROJECT_BLOCK_DEF_ID,D.PROJECT_BLOCK_DEF_D_ID FROM ZZZT_PROJECT_BLOCK_DEF T LEFT JOIN  ZZZT_PROJECT_BLOCK_DEF_D D ON  D.PROJECT_BLOCK_DEF_ID=T.PROJECT_BLOCK_DEF_ID where T.PROJECT_BLOCK_DEF_ID = :projectBlockDefId", con);
                 OracleCommand cmd = new OracleCommand(query, con);
                 cmd.CommandType = CommandType.Text;
-                cmd.Parameters.Add(new OracleParameter("projectBlockDefId", projectBlockDef));
+                cmd.Parameters.Add(new OracleParameter("qualityControlDefId", qualityControlDefId));
 
                 OracleDataReader reader = cmd.ExecuteReader();
                 while (reader.Read())
