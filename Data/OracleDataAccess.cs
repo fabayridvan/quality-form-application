@@ -142,7 +142,7 @@ namespace QuailtyForm.Data
                 con.Open();
                 string query = string.Format(@"SELECT CATEGORIES_ID, DESCRIPTION
                                          FROM gnld_categories
-                                        WHERE categories_page = 12 AND STEP = 2", con);
+                                        WHERE categories_page = 12 AND STEP = 2 AND ZZ_NOT_ADD_SURVEY IS NULL", con);
 
                 //OracleCommand cmd = new OracleCommand("SELECT CATEGORIES_ID, DESCRIPTION FROM gnld_categories where categories_page = 12 and STEP=2 ", con);
                 OracleCommand cmd = new OracleCommand(query, con);
@@ -174,7 +174,8 @@ namespace QuailtyForm.Data
                                          WHERE     categories_page = 12
                                                AND STEP = 3
                                                AND PARENT_CAT_ID IS NOT NULL
-                                               AND PARENT_CAT_ID = :parentId", con);
+                                               AND PARENT_CAT_ID = :parentId
+                                               AND ZZ_NOT_ADD_SURVEY IS NULL", con);
 
                 //string query = "SELECT CATEGORIES_ID, DESCRIPTION FROM gnld_categories WHERE categories_page = 12 AND STEP=3 AND (PARENT_CAT_ID = :parentId or nvl(parent_cat_id,0) = 0)";
                 OracleCommand cmd = new OracleCommand(query, con);
@@ -209,7 +210,8 @@ namespace QuailtyForm.Data
                                                AND STEP = 4
                                                AND PARENT_CAT_ID IS NOT NULL
                                                AND PARENT_CAT_ID <> 0
-                                               AND PARENT_CAT_ID = :parentId", con);
+                                               AND PARENT_CAT_ID = :parentId
+                                               AND ZZ_NOT_ADD_SURVEY IS NULL", con);
                 //string query = "SELECT CATEGORIES_ID, DESCRIPTION FROM gnld_categories WHERE categories_page = 12 AND STEP=4 AND (PARENT_CAT_ID = :parentId or nvl(parent_cat_id,0) = 0)";
                 OracleCommand cmd = new OracleCommand(query, con);
                 cmd.CommandType = CommandType.Text;
@@ -240,12 +242,13 @@ namespace QuailtyForm.Data
                 //string query = "SELECT CATEGORIES_ID, DESCRIPTION FROM gnld_categories WHERE categories_page = 12 AND STEP=5 AND (PARENT_CAT_ID = :parentId or nvl(parent_cat_id,0) = 0)";
                 //string query = "SELECT CATEGORIES_ID, DESCRIPTION FROM gnld_categories WHERE categories_page = 12 AND STEP=5 AND ISPASSIVE = 0";
                 string query = string.Format(@"SELECT CATEGORIES_ID, DESCRIPTION
-                                          FROM gnld_categories
-                                         WHERE     categories_page = 12
+                                               FROM gnld_categories
+                                               WHERE     categories_page = 12
                                                AND STEP = 5
                                                AND PARENT_CAT_ID IS NOT NULL
                                                AND PARENT_CAT_ID <> 0
-                                               AND PARENT_CAT_ID = :parentId", con);
+                                               AND PARENT_CAT_ID = :parentId
+                                               AND ZZ_NOT_ADD_SURVEY IS NULL", con);
                 OracleCommand cmd = new OracleCommand(query, con);
                 cmd.CommandType = CommandType.Text;
 
