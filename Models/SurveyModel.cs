@@ -3,6 +3,7 @@
     public class SurveyModel
     {
         public int SurveyId { get; set; }
+        public int QualityControlDefId { get; set; }
         public int FloorId { get; set; }
 
         public List<QuestionAnswer>? Questions { get; set; }

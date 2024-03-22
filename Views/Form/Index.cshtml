@@ -314,6 +314,8 @@
             console.log(selectedCompany);
             var surveyId = selectedCompany[0] ? selectedCompany[0].surveyId : null;
             console.log(surveyId);
+            var qualityControlDefId = selectedCompany[0] ? selectedCompany[0].id : null;
+            console.log(qualityControlDefId);
             //get floor id
             var projects = @Html.Raw(Json.Serialize(Model.Projects));
             var displayText = $('#project1Select option:selected').text();
@@ -324,7 +326,7 @@
             var formData = {
                 surveyId: surveyId,
                 floorId: floorId,
-
+                qualityControlDefId: qualityControlDefId,
                 questions: []  // Array to hold questions and their answers
             };
 
