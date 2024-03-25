@@ -141,7 +141,7 @@ namespace QuailtyForm.Controllers
                 // Soru ve cevapları kaydet
                 foreach (var qa in surveyData.Questions)
                 {
-                    string questionInsertQuery = " INSERT INTO ZZZT_QUALITY_FORMS_ANSWERS (QUESTION_ID,SURVEY_ID,FLOOR_ID,DESCRIPTION,QUALITY_CONTROL_DEF_ID) VALUES (:QuestionId,:SurveyId,:FloorId,:Answer,:QualityControlDefId)";
+                    string questionInsertQuery = " INSERT INTO ZZZT_QUALITY_FORMS_ANSWERS (QUESTION_ID,SURVEY_ID,FLOOR_ID,DESCRIPTION,QUALITY_CONTROL_DEF_ID,CREATE_DATE) VALUES (:QuestionId,:SurveyId,:FloorId,:Answer,:QualityControlDefId, SYSDATE)";
                     var questionParameters = new OracleParameter[]
                     {
                         new OracleParameter("QuestionId", qa.QuestionId),
