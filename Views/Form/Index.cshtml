@@ -117,6 +117,11 @@
             </div>
         </div>
     </form>
+    <footer class="border-top footer text-muted">
+        <div class="container" style="margin-top:20px">
+            &copy; 2024 - QualityForm by FABIT | Bilgi Teknolojileri
+        </div>
+    </footer>
 
 </body>
 
@@ -417,5 +422,29 @@
         $('#category2Select').select2();
         $('#category3Select').select2();
         $('#category4Select').select2();
+    });
+</script>
+<script>
+    var idleTime = 0;
+
+    $(document).ready(function () {
+        // Kullanıcı etkinliğini sıfırla
+        $(this).mousemove(function (e) {
+            idleTime = 0;
+        });
+        $(this).keypress(function (e) {
+            idleTime = 0;
+        });
+
+        // Her dakika idleTime'ı arttır
+        var idleInterval = setInterval(timerIncrement, 60000); // 1 dakika
+
+        function timerIncrement() {
+            idleTime = idleTime + 1;
+            if (idleTime > 9) { // 10 dakika
+                window.location.href = '/Login'; // Giriş sayfasına yönlendir
+                clearInterval(idleInterval);
+            }
+        }
     });
 </script>

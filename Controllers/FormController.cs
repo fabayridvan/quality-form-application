@@ -171,9 +171,7 @@ namespace QuailtyForm.Controllers
             return View(); // Başarılı işlem sonrası görüntülenecek view
         }
 
-
-
-
+        
 
 
 

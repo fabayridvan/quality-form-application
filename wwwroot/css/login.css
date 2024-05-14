@@ -9,12 +9,15 @@
     transform: translate(-50%, -50%);
     top: 50%;
     left: 50%;
+    width: fit-content; /* Add this to prevent the container from stretching full width */
+    height: fit-content;
 }
 
 form {
     background: rgba(255,255,255,0.3);
-    padding: 3em;
-    height: 320px;
+    padding: 2em; /* Decrease the padding */
+    height: 400px; /* Decrease the height */
+    width: 300px; /* Decrease the width to make the form narrower */
     border-radius: 20px;
     border-left: 1px solid rgba(255,255,255,0.3);
     border-top: 1px solid rgba(255,255,255,0.3);
@@ -23,6 +26,8 @@ form {
     text-align: center;
     position: relative;
     transition: all 0.2s ease-in-out;
+    display: block; /* Add this to ensure the form block centers in the .container */
+    margin: auto; /* This will center the form in the .container */
 }
 
     form p {
@@ -162,4 +167,28 @@ select:focus,
 textarea:focus,
 button:focus {
     outline: none;
+}
+img {
+    background: transparent;
+    width: 150px;
+    padding: 1em;
+    margin-bottom: 2em;
+    border: none;
+    border-left: 1px solid rgba(255,255,255,0.3);
+    border-top: 1px solid rgba(255,255,255,0.3);
+    border-radius: 5000px;
+    backdrop-filter: blur(5px);
+    box-shadow: 4px 4px 60px rgba(0,0,0,0.2);
+    color: #fff;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    display: block;
+    margin: 0 auto 10px auto;
+}
+.error {
+    color: blue;
+    display: none;
+    margin-top: 3em;
 }
