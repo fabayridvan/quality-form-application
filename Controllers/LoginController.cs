@@ -32,6 +32,7 @@ namespace QuailtyForm.Controllers
             text = HashHelper.HashPassword(password);
 
             var connectionString = _configuration.GetConnectionString("OracleDbConnection");
+            //connectionString = 
 
             // Using Oracle.DataAccess.Client
             using (OracleConnection connection = new OracleConnection(connectionString))
@@ -76,7 +77,8 @@ namespace QuailtyForm.Controllers
             {
                 // Kullanıcı adını session'a kaydedin
                 HttpContext.Session.SetString("User", username);
-                return RedirectToAction("Index", "Form"); // "Home" kontrolörünün "Index" eylemine yönlendir
+                return RedirectToAction("Index", "Main");
+                //return RedirectToAction("Index", "Form");
             }
             else
             {

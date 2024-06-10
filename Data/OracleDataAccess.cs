@@ -14,6 +14,7 @@ namespace QuailtyForm.Data
         public OracleDataAccess(string connectionString)
         {
             ConnectionString = connectionString;
+            //ConnectionString = 
         }
 
         public void ExecuteQuery(string query, OracleParameter[] parameters)

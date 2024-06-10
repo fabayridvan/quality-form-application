@@ -1,450 +1,167 @@
-﻿@model QuailtyForm.ViewModels.ComplexFormViewModel
+﻿@model QuailtyForm.ViewModels.FormDetailsViewModel
 
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <!-- my css-->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Detayları</title>
     <link href="~/css/my.css" rel="stylesheet" />
     <link href="~/css/switch.css" rel="stylesheet" />
     <link href="~/css/select.css" rel="stylesheet" />
 
-    <!-- İlk olarak jQuery -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
 
-    <!-- Sonra Select2 JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.8/js/select2.min.js" defer></script>
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
 
-    <!-- Select2 CSS -->
-@*     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
- *@
-    <!-- Bootstrap JS -->
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.x.x/js/bootstrap.min.js"></script>
+        th {
+            background: -moz-linear-gradient(0deg, rgba(74,63,146,1) 0%, rgba(156,63,146,1) 100%);
+            color: white;
+            text-align: center;
+            background-color: #f2f2f2;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
 
-@*     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
- *@    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        td {
+            text-align: left;
+        }
 
-    
+        .table-responsive {
+            border-radius: 4px;
+        }
 
+        #popup {
+            display: none;
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            border: 1px solid #ccc;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
 
-  
-  
+        #overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+    </style>
 </head>
-
 <body>
+    <form asp-action="SubmitApproval" method="post" onsubmit="return handleSubmit(event)">
+        <div class="container">
+            <h3>Tarifler</h3>
+            <ul>
+                @foreach (var recipe in Model.RecipeDescs)
+                {
+                    <li>@recipe.RecipeDesc</li>
+                }
+            </ul>
 
-
-    <form method="post">
-        <div class="logo-container" style="text-align: center; margin-bottom: 20px;">
-            <img src="~/Logo Dikey Medium-Mor.png" alt="Company Logo" style="max-width: 200px;"> <!-- Adjust the size as needed -->
-            <h1>Kalite Kontrol Anketi</h1>
+            <h3>Sorular</h3>
+            <ul>
+                @foreach (var question in Model.Questions)
+                {
+                    <li>@question</li>
+                }
+            </ul>
         </div>
-       
-        <div class="col-12">
-            <div class="col-12">
-                <!-- Dark Mode Switch -->
-                <div style="display: flex; align-items: center; margin-bottom:20px;">
-                    <label class="switch">
-                       
-                        <input id="darkModeToggle" class="pristine" type="checkbox" name="toggle" value="on">
-                        
-                    </label>
-                    <label for="darkModeToggle" style="margin-left: 10px;font-weight:bold;"><svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="bi bi-moon-fill" viewBox="0 0 32 16">  <path d="M6 .278a.77.77 0 0 1 .08.858 7.2 7.2 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277q.792-.001 1.533-.16a.79.79 0 0 1 .81.316.73.73 0 0 1-.031.893A8.35 8.35 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.75.75 0 0 1 6 .278" /></svg></label>
-                </div>
-                <div>
-                    <h3>Kalite Kontrol</h3>
-                    <select id="company1Select" asp-items="@(new SelectList(Model.Companies,"Id",  "ControlName","SurveyId"))">
-                        <option value="">Kaydı seçiniz...</option>
-                    </select>
-                </div>
-                <div>
-                    <h3>Blok - Kat</h3>
-                    <select id="project1Select" asp-items="@(new SelectList(Model.Projects, "BlockDefDId","DisplayText"))">
-                        <option value="">Kaydı seçiniz...</option>
-                    </select>
-                </div>
-                <div>
-                    <h3>Kategori-1</h3>
-                    <select id="category1Select" asp-items="@(new SelectList(Model.Categories1, "Id", "Description"))">
-                        <option value="">Kaydı seçiniz...</option>
-                    </select>
-                </div>
-
-                <div>
-                    <h3>Kategori-2</h3>
-                    <select id="category2Select">
-                        <option value="">Kaydı seçiniz...</option>
-                    </select>
-                </div>
-
-                <div>
-                    <h3>İmalat Grubu</h3>
-                    <select id="category3Select">
-                        <option value="">Kaydı seçiniz...</option>
-                    </select>
-                </div>
-
-                <div>
-                    <h3>İmalat Adı</h3>
-                    <select id="category4Select" asp-items="@(new SelectList(Model.Categories4, "Id", "Description"))">
-                        <option value="">Kaydı seçiniz...</option>
-                    </select>
-                </div>
-                <div style="flex-basis: 100%;">
-                    <button id="listeleButton" type="button" onclick="listeleForm()" class="placeholder-wave">Soruları Listele</button>
-
-
-                </div>
-
-                <!-- Question list section, initially hidden -->
-                <div class="question-list" id="questionList" style="display:none;">
-                    <h3>Sorular Listesi</h3>
-                    <ul id="questionItems" class="question-list">
-                        <!-- Sorular burada listelenecek -->
-                    </ul>
-                    <button type="button" onclick="submitForm()" class="save-button">Anketi Kaydet</button>
-                </div>
+        <div>
+            <h3>Onayla/Reddet</h3>
+            <div>
+                <label>
+                    <input type="radio" name="approval" value="accept" /> Onayla
+                </label>
+                <label>
+                    <input type="radio" name="approval" value="reject" /> Reddet
+                </label>
             </div>
         </div>
-        <div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="modalLabel">Anket Sonucu</h5>
-                    </div>
-                    <div class="modal-body">
-                        Anketiniz başarıyla kaydedilmiştir.
-                    </div>
-                </div>
-            </div>
-        </div>
+
+        @* Hidden fields for qualityControlDefId and projectBlockDefDId *@
+        <input type="hidden" name="qualityControlDefId" value="@ViewData["QualityControlDefId"]" />
+        <input type="hidden" name="projectBlockDefDId" value="@ViewData["ProjectBlockDefDId"]" />
+        <input type="hidden" name="projectAndCompany" value="@ViewData["ProjectAndCompany"]" />
+        <input type="hidden" name="formName" value="@ViewData["FormName"]" />
+        <input type="hidden" name="blockAndFloor" value="@ViewData["BlockAndFloor"]" />
+        <input type="hidden" name="approvalStatus" value="@ViewData["ApprovalStatus"]" />
+
+        <button type="submit">Kaydet</button>
     </form>
-    <footer class="border-top footer text-muted">
-        <div class="container" style="margin-top:20px">
-            &copy; 2024 - QualityForm by FABIT | Bilgi Teknolojileri
-        </div>
-    </footer>
 
+    <!-- Pop-up -->
+    <div id="overlay"></div>
+    <div id="popup">
+        <p>Kayıt yapılmıştır.</p>
+        <button onclick="closePopup()">Kapat</button>
+    </div>
+
+    <script>
+        function handleSubmit(event) {
+            var radios = document.getElementsByName('approval');
+            var formIsValid = false;
+
+            for (var i = 0; i < radios.length; i++) {
+                if (radios[i].checked) {
+                    formIsValid = true;
+                    break;
+                }
+            }
+
+            if (!formIsValid) {
+                alert('Lütfen bir seçenek seçin: Onayla veya Reddet');
+                return false; // Formun gönderilmesini engeller
+            }
+
+            // Post işlemini simüle et (gerçek post işlemini burada yapabilirsiniz)
+            var form = event.target;
+            var formData = new FormData(form);
+
+            fetch(form.action, {
+                method: form.method,
+                body: formData
+            }).then(response => {
+                if (response.ok) {
+                    showPopup();
+                } else {
+                    alert('Bir hata oluştu, lütfen tekrar deneyin.');
+                }
+            }).catch(error => {
+                console.error('Hata:', error);
+                alert('Bir hata oluştu, lütfen tekrar deneyin.');
+            });
+
+            return false; // Formun normalde yapılacak işlemini durdurur
+        }
+
+        function showPopup() {
+            document.getElementById('popup').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+        }
+
+        function closePopup() {
+            document.getElementById('popup').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+            window.location.href = "/Main/Index"; // Main/Index sayfasına yönlendirme
+        }
+    </script>
 </body>
-
-<script>
-    function listeleForm() {
-        var category1Id = $('#category1Select').val();
-        var category2Id = $('#category2Select').val();
-        var category3Id = $('#category3Select').val();
-        var category4Id = $('#category4Select').val();
-
-        $.ajax({
-            url: '@Url.Action("GetQuestionData", "Form")',
-            type: 'GET',
-            data: {
-                category1Id: category1Id,
-                category2Id: category2Id,
-                category3Id: category3Id,
-                category4Id: category4Id
-            },
-            success: function (questions) {
-                console.log(questions); // Gelen veriyi konsolda inceleyin
-
-                var list = $('#questionList ul');
-                list.empty(); // Mevcut listeyi temizle
-                $.each(questions, function (index, question) {
-                    var li = $('<li>').css({ 'list-style-type': 'none' }); // List item for each question
-
-                    var flexContainer = $('<div>').css({
-                        display: 'flex',
-                        alignItems: 'center',
-                        marginBottom: '10px' // Add some space between the questions
-                    });
-
-                    var radioAccept = $('<input>', {
-                        type: 'radio',
-                        name: question.id,
-                        value: 'accept',
-                        required: true
-                    });
-
-                    var labelAccept = $('<label>')
-                        .text('Kabul')
-                        .addClass('label-green')
-                        .css({ 'marginLeft': '5px' });
-
-                    var radioReject = $('<input>', {
-                        type: 'radio',
-                        name: question.id,
-                        value: 'reject'
-                    });
-
-                    var labelReject = $('<label>')
-                        .text('Red')
-                        .addClass('label-red')
-                        .css({ 'marginLeft': '10px' });
-
-                    flexContainer.append(radioAccept, labelAccept, radioReject, labelReject);
-                    li.append(document.createTextNode(question.question_Text));
-                    li.append(flexContainer); // Append the flex container to the list item
-                    list.append(li); // Append the list item to the list
-                });
-
-                $('#questionList').show(); // Soru listesini göster
-            },
-            error: function (xhr, status, error) {
-                console.error("Hata:", error);
-            }
-        });
-    }
-
-</script>
-
-<script>
-    $(document).ready(function () {
-        // Category1 değişikliğinde Category2'yi güncelle
-        $('#category1Select').change(function () {
-            var selectedCategoryId = $(this).val();
-
-            $.ajax({
-                url: '@Url.Action("GetCategory2Data", "Form")',
-                type: 'GET',
-                data: { parentId: selectedCategoryId },
-                success: function (data) {
-                    var category2Select = $('#category2Select');
-                    category2Select.empty();
-                    category2Select.append($('<option>', { value: '', text: 'Kaydı seçiniz...' }));
-
-                    $.each(data, function (index, item) {
-                        category2Select.append($('<option>', {
-                            value: item.id,
-                            text: item.description
-                        }));
-                    });
-                }
-            });
-        });
-
-        // Category2 değişikliğinde Category3'ü güncelle
-        $('#category2Select').change(function () {
-            var selectedCategoryId = $(this).val();
-
-            $.ajax({
-                url: '@Url.Action("GetCategory3Data", "Form")',
-                type: 'GET',
-                data: { parentId: selectedCategoryId },
-                success: function (data) {
-                    var category3Select = $('#category3Select');
-                    category3Select.empty();
-                    category3Select.append($('<option>', { value: '', text: 'Kaydı seçiniz...' }));
-
-                    $.each(data, function (index, item) {
-                        category3Select.append($('<option>', {
-                            value: item.id,
-                            text: item.description
-                        }));
-                    });
-                }
-            });
-        });
-        // Category3 değişikliğinde Category4'ü güncelle
-        $('#category3Select').change(function () {
-            var selectedCategoryId = $(this).val();
-
-            $.ajax({
-                url: '@Url.Action("GetCategory4Data", "Form")',
-                type: 'GET',
-                data: { parentId: selectedCategoryId },
-                success: function (data) {
-                    var category4Select = $('#category4Select');
-                    category4Select.empty();
-                    category4Select.append($('<option>', { value: '', text: 'Kaydı seçiniz...' }));
-
-                    $.each(data, function (index, item) {
-                        category4Select.append($('<option>', {
-                            value: item.id,
-                            text: item.description
-                        }));
-                    });
-                }
-            });
-        });
-        // Kalite Kontrol Forma göre Kat Blok Seçme
-        $('#company1Select').change(function () {
-            var selectedProjectId = $(this).val();
-
-            $.ajax({
-                url: '@Url.Action("GetProjectData", "Form")',
-                type: 'GET',
-                data: { projectBlockDef: selectedProjectId },
-                success: function (data) {
-                    var project1Select = $('#project1Select');
-                    project1Select.empty();
-                    project1Select.append($('<option>', { value: '', text: 'Kaydı seçiniz...' }));
-
-                    $.each(data, function (index, item) {
-                        project1Select.append($('<option>', {
-                            value: item.id,
-                            text: item.displayText
-                        }));
-                    });
-                }
-            });
-        });
-
-    });
-
-
-</script>
-<script>
-    function submitForm() {
-        var allFieldsFilled = true;
-
-        // Tüm açılır menüleri kontrol et
-        $('#company1Select, #project1Select, #category1Select, #category2Select, #category3Select').each(function () {
-            if ($(this).val() === '') {
-                allFieldsFilled = false;
-            }
-        });
-
-        // Tüm sorular için radyo düğmelerini kontrol et
-        $('#questionItems li').each(function () {
-            if ($(this).find('input[type="radio"]:checked').length === 0) {
-                allFieldsFilled = false;
-            }
-        });
-        if (!allFieldsFilled) {
-            alert('Lütfen tüm alanları doldurunuz.');
-            return; // Fonksiyonu burada durdur
-        }
-        else {
-            // get survey id
-            var companies = @Html.Raw(Json.Serialize(Model.Companies));
-            var name = $('#company1Select option:selected').text();
-            var selectedCompany = companies.filter(c => c.controlName == name);
-            console.log(selectedCompany);
-            var surveyId = selectedCompany[0] ? selectedCompany[0].surveyId : null;
-            console.log(surveyId);
-            var qualityControlDefId = selectedCompany[0] ? selectedCompany[0].id : null;
-            console.log(qualityControlDefId);
-            //get floor id
-            var projects = @Html.Raw(Json.Serialize(Model.Projects));
-            var displayText = $('#project1Select option:selected').text();
-            var selectedProject = projects.filter(c => c.displayText == displayText);
-            console.log(selectedProject);
-            var floorId = selectedProject[0] ? selectedProject[0].blockDefDId : null;
-            console.log(floorId);
-            var formData = {
-                surveyId: surveyId,
-                floorId: floorId,
-                qualityControlDefId: qualityControlDefId,
-                questions: []  // Array to hold questions and their answers
-            };
-
-            $('#questionItems li').each(function () {
-
-                debugger;
-                var selectedRadio = $(this).find('input[type="radio"]:checked');
-                if (selectedRadio.length > 0) {
-                    var questionId1 = selectedRadio.attr('name');
-                    var questionId = Number(questionId1);
-                    var answer = selectedRadio.val();
-
-                    formData.questions.push({
-                        questionId: questionId,
-                        answer: answer
-                    });
-                }
-            });
-            console.log(JSON.stringify(formData));
-            // AJAX POST request
-            $.ajax({
-                url: '@Url.Action("SubmitSurvey", "Form")',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(formData),
-                success: function (response) {
-                    // Modal pencereyi göster
-                    $('#successModal').modal('show');
-                    // Form gönderme butonunu devre dışı bırak
-                    $('#save-button').prop('disabled', true);
-                    // Kısa bir gecikme sonrasında sayfayı yenile
-                    setTimeout(function () {
-                        window.location.reload();
-                    }, 2000); // 3000 milisaniye = 3 saniye
-
-                },
-                error: function (error) {
-                    // Error handling here
-                    alert('Bir hata oluştu. Anket kaydedilemedi.');
-                }
-            });
-
-        }
-
-    }
-
-</script>
-
-
-@*
-<script>
-    $('#successModal').on('hidden.bs.modal', function (e) {
-        // Sayfayı yenileyin
-        window.location.reload();
-
-        // Veya isteğe bağlı olarak başka bir sayfaya yönlendirin
-        // window.location.href = 'yeniSayfaURLsi';
-    });
-</script> *@
-
-<script>
-    $(document).ready(function () {
-        // Dark mode toggle için event listener
-        $('#darkModeToggle').change(function () {
-            $('body').toggleClass('dark-mode');
-        });
-
-    });
-</script>
-
-
-<script>
-    $(document).on('click', function (e) {
-        let tar = $(e.target);
-        if (tar.attr('name') === 'toggle') {
-            tar.removeAttr('class');
-        }
-    });
-
-</script>
-
-<script>
-    $(document).ready(function () {
-        // $('#mySelect').select2();
-        $('#company1Select').select2();
-        $('#project1Select').select2();
-        $('#category1Select').select2();
-        $('#category2Select').select2();
-        $('#category3Select').select2();
-        $('#category4Select').select2();
-    });
-</script>
-<script>
-    var idleTime = 0;
-
-    $(document).ready(function () {
-        // Kullanıcı etkinliğini sıfırla
-        $(this).mousemove(function (e) {
-            idleTime = 0;
-        });
-        $(this).keypress(function (e) {
-            idleTime = 0;
-        });
-
-        // Her dakika idleTime'ı arttır
-        var idleInterval = setInterval(timerIncrement, 60000); // 1 dakika
-
-        function timerIncrement() {
-            idleTime = idleTime + 1;
-            if (idleTime > 9) { // 10 dakika
-                window.location.href = '/Login'; // Giriş sayfasına yönlendir
-                clearInterval(idleInterval);
-            }
-        }
-    });
-</script>
+</html>

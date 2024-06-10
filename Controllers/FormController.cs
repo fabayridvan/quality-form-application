@@ -1,217 +1,311 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Oracle.ManagedDataAccess.Client;
-using OracleInternal.SqlAndPlsqlParser.LocalParsing;
-using QuailtyForm.Data;
-using QuailtyForm.Models;
 using QuailtyForm.ViewModels;
-using System.Data;
-using System.DirectoryServices.ActiveDirectory;
-using System.Drawing;
+using System.Collections.Generic;
 
 namespace QuailtyForm.Controllers
 {
     public class FormController : Controller
     {
         private readonly IConfiguration _configuration;
+
         public FormController(IConfiguration configuration)
         {
             _configuration = configuration;
         }
-        public IActionResult Index()
+
+        public IActionResult Index(string projectAndCompany, string formName, string blockAndFloor, string approvalStatus, int qualityControlDefId, int projectBlockDefDId,int categoriesId)
         {
-            var connectionString = _configuration.GetConnectionString("OracleDbConnection");
+            string userName = HttpContext.Session.GetString("User");
 
-            OracleDataAccess da = new OracleDataAccess(connectionString);
+            ViewData["ProjectAndCompany"] = projectAndCompany;
+            ViewData["FormName"] = formName;
+            ViewData["BlockAndFloor"] = blockAndFloor;
+            ViewData["ApprovalStatus"] = approvalStatus;
+            ViewData["QualityControlDefId"] = qualityControlDefId;
+            ViewData["ProjectBlockDefDId"] = projectBlockDefDId;
 
-            var project1List = da.GetCompany();
-            int selectedqualityControlDefId = project1List.FirstOrDefault()?.Id ?? 0;
-            //int selectedprojectBlockDef = project1List.FirstOrDefault()?.ProjectBlockDefId ?? 0;
+            var recipeDescs = GetRecipeDesc(userName, formName, categoriesId);
 
-            
-            var categories1List = da.GetCategory1();
-            int selectedParentId = categories1List.FirstOrDefault()?.Id ?? 0;
-
-            var categories2List = da.GetCategory2(selectedParentId);
-            int selectedParentId2 = categories2List.FirstOrDefault()?.Id ?? 0;
-
-            var categories3List = da.GetCategory3(selectedParentId);
-            int selectedParentId3 = categories3List.FirstOrDefault()?.Id ?? 0;
-
-            var viewModel = new ComplexFormViewModel
+            if (recipeDescs.Count == 0)
             {
-                Companies = da.GetCompany(),
-                Projects = da.GetProject(selectedqualityControlDefId),
-                Categories1 = da.GetCategory1(),
-                Categories2 = da.GetCategory2(selectedParentId),
-                Categories3 = da.GetCategory3(selectedParentId2),
-                Categories4 = da.GetCategory4(selectedParentId3)
+                return View(new FormDetailsViewModel());
+            }
+
+            int recipeDefinitionId = recipeDescs[0].RecipeDefinitionId;
+            var questions = GetQuestion(userName, formName, categoriesId, recipeDefinitionId);
+
+            var formDetails = new FormDetailsViewModel
+            {
+                RecipeDescs = recipeDescs,
+                Questions = questions
             };
 
-            return View(viewModel);
+            return View(formDetails);
         }
 
-        public IActionResult SomeAction()
+        private List<TableViewModel> GetAllParametersIds(string userName, int qualityControlDefId, int projectBlockDefDId)
         {
-            var connectionString = _configuration.GetConnectionString("OracleDbConnection");
-            OracleDataAccess da = new OracleDataAccess(connectionString);
+            var table = new List<TableViewModel>();
 
-            var project1List = da.GetCompany();
-            int selectedqualityControlDefId = project1List.FirstOrDefault()?.Id ?? 0;
+            string connectionString = _configuration.GetConnectionString("OracleDbConnection");
+            //connectionString = 
 
-            var category1List = da.GetCategory1();
-            int selectedParentId = category1List.FirstOrDefault()?.Id ?? 0;
-            var category2List = da.GetCategory2(selectedParentId);
-            int selectedParentId2 = category2List.FirstOrDefault()?.Id ?? 0;
-            var category3List = da.GetCategory3(selectedParentId2);
-            int selectedParentId3 = category3List.FirstOrDefault()?.Id ?? 0;
-            var category4List = da.GetCategory4(selectedParentId3);
-
-            var viewModel = new ComplexFormViewModel
+            using (var connection = new OracleConnection(connectionString))
             {
+                string query = @"SELECT  GC.CO_ID, -- FİRMA ID
+                                        PM.PROJECT_M_ID, -- PROJE ID
+                                        US.US_ID, -- KULLANICI ID
+                                        PBD.PROJECT_BLOCK_DEF_ID, -- BLOK ID
+                                        PDD.PROJECT_BLOCK_DEF_D_ID,
+                                        QCF.QUALITY_CONTROL_DEF_ID
+                                  FROM ZZZT_QUALITY_CONTROL_DEF  QCF
+                                       LEFT JOIN FIND_CO_PROJECT_M CPM
+                                           ON CPM.CO_PROJECT_M_ID = QCF.CO_PROJECT_M_ID
+                                       LEFT JOIN FIND_PROJECT_M PM ON PM.PROJECT_M_ID = CPM.PROJECT_M_ID
+                                       LEFT JOIN ZZZT_QUALITY_CONTROL_DEF_D CDD
+                                           ON CDD.QUALITY_CONTROL_DEF_ID = QCF.QUALITY_CONTROL_DEF_ID
+                                       LEFT JOIN ZZZT_PROJECT_BLOCK_DEF PBD
+                                           ON PBD.PROJECT_BLOCK_DEF_ID = CDD.PROJECT_BLOCK_DEF_ID
+                                       LEFT JOIN ZZZT_PROJECT_BLOCK_DEF_D PDD
+                                           ON PDD.PROJECT_BLOCK_DEF_ID = PBD.PROJECT_BLOCK_DEF_ID
+                                       LEFT JOIN GNLD_COMPANY GC ON GC.CO_ID = QCF.CO_ID
+                                       LEFT JOIN ZZZT_FORM_BASED_AUTOHORIZATION FBA
+                                           ON QCF.QUALITY_CONTROL_DEF_ID = FBA.QUALITY_CONTROL_DEF_ID
+                                       LEFT JOIN USERS US ON FBA.US_ID = US.US_ID
+                                       LEFT JOIN ZZZT_QUALITY_FORMS_ANSWERS QFA
+                                           ON QFA.QUALITY_CONTROL_DEF_ID = QCF.QUALITY_CONTROL_DEF_ID
+                                 WHERE US.US_USERNAME = :userName AND QCF.QUALITY_CONTROL_DEF_ID = :qualityControlDefId AND PDD.PROJECT_BLOCK_DEF_D_ID = :projectBlockDefDId";
 
-                Categories1 = category1List,
-                Categories2 = category2List,
-                Categories3 = category3List,
-                Categories4 = category4List
-            };
 
-            return View(viewModel); // ViewModel'i View'a gönder
+                using (var command = new OracleCommand(query, connection))
+                {
+                    command.Parameters.Add(new OracleParameter("userName", userName));
+                    command.Parameters.Add(new OracleParameter("qualityControlDefId", qualityControlDefId));
+                    command.Parameters.Add(new OracleParameter("projectBlockDefDId", projectBlockDefDId));
+
+                    connection.Open();
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var tableViewModel = new TableViewModel
+                            {
+                                CoId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                                ProjectMId = reader.IsDBNull(1) ? 0 : reader.GetInt32(1),
+                                UsId = reader.IsDBNull(2) ? 0 : reader.GetInt32(2),
+                                ProjectBlockDefId = reader.IsDBNull(3) ? 0 : reader.GetInt32(3),
+                                ProjectBlockDefDId = reader.IsDBNull(4) ? 0 : reader.GetInt32(4),
+                                QualityControlDefId = reader.IsDBNull(5) ? 0 : reader.GetInt32(5)
+                            };
+                            table.Add(tableViewModel);
+                        }
+                    }
+                }
+            }
+            return table;
         }
 
-        [HttpGet]
-        public IActionResult GetCategory2Data(int parentId)
+        private List<RecipeViewModel> GetRecipeDesc(string userName, string formName, int categoriesId)
         {
-            var connectionString = _configuration.GetConnectionString("OracleDbConnection");
-            OracleDataAccess da = new OracleDataAccess(connectionString);
+            var recipeDescs = new List<RecipeViewModel>();
 
-            var category2Data = da.GetCategory2(parentId);
+            string connectionString = _configuration.GetConnectionString("OracleDbConnection");
+            //connectionString = 
 
-            return Json(category2Data);
+            using (var connection = new OracleConnection(connectionString))
+            {
+                string query = @"SELECT RD.RECIPE_DEFINITION_ID,
+                                    RD.RECIPE_DESC
+                          FROM ZZZT_QUALITY_CONTROL_DEF  QCD
+                               LEFT JOIN ZZZT_FORM_BASED_AUTOHORIZATION FBA
+                                   ON FBA.QUALITY_CONTROL_DEF_ID = QCD.QUALITY_CONTROL_DEF_ID
+                               LEFT JOIN USERS US ON US.US_ID = FBA.US_ID
+                               LEFT JOIN GNLD_CATEGORIES GT
+                                   ON FBA.ZZ_CATEGORIES_ID = GT.CATEGORIES_ID
+                               LEFT JOIN ZZZT_AUTOHORIZATION_D AD
+                                   ON AD.FORM_BASED_AUTOHORIZATION_ID = FBA.FORM_BASED_AUTOHORIZATION_ID
+                               LEFT JOIN ZZZT_RECIPE_DEFINITION RD
+                                   ON RD.RECIPE_DEFINITION_ID = AD.ZZ_RECIPE_DEFINITION_ID
+                               LEFT JOIN CRMD_SURVEY CS ON CS.SURVEY_ID = QCD.SURVEY_ID
+                         WHERE QCD.QUALITY_CONTROL_NAME = :formName
+                               AND US.US_USERNAME = :userName
+                               AND FBA.ZZ_CATEGORIES_ID = :categoriesId";
+
+                using (var command = new OracleCommand(query, connection))
+                {
+                    command.Parameters.Add(new OracleParameter("formName", formName));
+                    command.Parameters.Add(new OracleParameter("userName", userName));
+                    command.Parameters.Add(new OracleParameter("categoriesId", categoriesId));
+
+                    connection.Open();
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var recipeViewModel = new RecipeViewModel
+                            {
+                                RecipeDefinitionId = reader.GetInt32(0),
+                                RecipeDesc = reader.GetString(1)
+                            };
+                            recipeDescs.Add(recipeViewModel);
+                        }
+                    }
+                }
+            }
+
+            return recipeDescs;
         }
 
-        [HttpGet]
-        public IActionResult GetCategory3Data(int parentId)
+
+
+        private List<string> GetQuestion(string userName, string formName, int categoriesId, int recipeDefinitionId)
         {
-            var connectionString = _configuration.GetConnectionString("OracleDbConnection");
-            OracleDataAccess da = new OracleDataAccess(connectionString);
+            var questions = new List<string>();
 
-            var category3Data = da.GetCategory3(parentId);
-            return Json(category3Data);
-        }
+            string connectionString = _configuration.GetConnectionString("OracleDbConnection");
+            //connectionString = 
 
-        [HttpGet]
-        public IActionResult GetCategory4Data(int parentId)
-        {
-            var connectionString = _configuration.GetConnectionString("OracleDbConnection");
-            OracleDataAccess da = new OracleDataAccess(connectionString);
+            using (var connection = new OracleConnection(connectionString))
+            {
+                string query = @"SELECT CSQ.QUESTION
+                          FROM ZZZT_QUALITY_CONTROL_DEF  QCD
+                               LEFT JOIN ZZZT_FORM_BASED_AUTOHORIZATION FBA
+                                   ON FBA.QUALITY_CONTROL_DEF_ID = QCD.QUALITY_CONTROL_DEF_ID
+                               LEFT JOIN USERS US ON US.US_ID = FBA.US_ID
+                               LEFT JOIN GNLD_CATEGORIES GT
+                                   ON FBA.ZZ_CATEGORIES_ID = GT.CATEGORIES_ID
+                               LEFT JOIN ZZZT_AUTOHORIZATION_D AD
+                                   ON AD.FORM_BASED_AUTOHORIZATION_ID = FBA.FORM_BASED_AUTOHORIZATION_ID
+                               LEFT JOIN ZZZT_RECIPE_DEFINITION RD
+                                   ON RD.RECIPE_DEFINITION_ID = AD.ZZ_RECIPE_DEFINITION_ID
+                               LEFT JOIN CRMD_SURVEY CS ON CS.SURVEY_ID = QCD.SURVEY_ID
+                               LEFT JOIN CRMD_SURVEY_QUESTION CSQ
+                                   ON CSQ.SURVEY_ID = CS.SURVEY_ID
+                         WHERE QCD.QUALITY_CONTROL_NAME = :formName
+                               AND US.US_USERNAME = :userName
+                               AND CSQ.ZZ_CATEGORIES_ID = :categoriesId
+                               AND CSQ.RECIPE_DEFINITION_ID = :recipeDefinitionId";
 
-            var category4Data = da.GetCategory4(parentId);
-            return Json(category4Data);
-        }
+                using (var command = new OracleCommand(query, connection))
+                {
+                    command.Parameters.Add(new OracleParameter("formName", formName));
+                    command.Parameters.Add(new OracleParameter("userName", userName));
+                    command.Parameters.Add(new OracleParameter("categoriesId", categoriesId));
+                    command.Parameters.Add(new OracleParameter("recipeDefinitionId", recipeDefinitionId));
 
-        [HttpGet]
-        public IActionResult GetQuestionData(int category1Id, int category2Id, int category3Id, int category4Id)
-        {
-            var connectionString = _configuration.GetConnectionString("OracleDbConnection");
-            OracleDataAccess da = new OracleDataAccess(connectionString);
+                    connection.Open();
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            questions.Add(reader.GetString(0));
+                        }
+                    }
+                }
+            }
 
-            var questions3Data = da.GetQuestion(category1Id, category2Id, category3Id, category4Id);
-            return Json(questions3Data);
-        }
-
-        [HttpGet]
-        public IActionResult GetProjectData(int projectBlockDef)
-        {
-            var connectionString = _configuration.GetConnectionString("OracleDbConnection");
-            OracleDataAccess da = new OracleDataAccess(connectionString);
-
-            var project1Data = da.GetProject(projectBlockDef);
-            return Json(project1Data);
+            return questions;
         }
 
 
         [HttpPost]
-        public JsonResult SubmitSurvey([FromBody] SurveyModel surveyData)
+        public IActionResult SubmitApproval(string approval, int qualityControlDefId, int projectBlockDefDId)
         {
-            var connectionString = _configuration.GetConnectionString("OracleDbConnection");
-            OracleDataAccess da = new OracleDataAccess(connectionString);
+            string userName = HttpContext.Session.GetString("User");
+            var parameterIds = GetAllParametersIds(userName, qualityControlDefId, projectBlockDefDId);
+
             try
             {
-                // Soru ve cevapları kaydet
-                foreach (var qa in surveyData.Questions)
-                {
-                    string questionInsertQuery = " INSERT INTO ZZZT_QUALITY_FORMS_ANSWERS (QUESTION_ID,SURVEY_ID,FLOOR_ID,DESCRIPTION,QUALITY_CONTROL_DEF_ID,CREATE_DATE) VALUES (:QuestionId,:SurveyId,:FloorId,:Answer,:QualityControlDefId, SYSDATE)";
-                    var questionParameters = new OracleParameter[]
-                    {
-                        new OracleParameter("QuestionId", qa.QuestionId),
-                        new OracleParameter("SurveyId", surveyData.SurveyId),
-                        new OracleParameter("FloorId", surveyData.FloorId),
-                        new OracleParameter("Answer", qa.Answer),
-                        new OracleParameter("Answer", surveyData.QualityControlDefId)
-                    };
-
-                    da.ExecuteQuery(questionInsertQuery, questionParameters);
-                }
-
-                return Json(new { success = true, message = "Anket başarıyla kaydedildi." });
-
+                InsertApprovalRecord(parameterIds, approval);
+                return RedirectToAction("Index");
             }
             catch (Exception ex)
             {
-
-                return Json(new { success = false, message = "Anket kaydedilmedi." + "Hata Mesajı:" + ex });
+                // Hata işlemi
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                return RedirectToAction("Index");
             }
-
         }
 
-        // GET: Anket/Basarili
-        public IActionResult Basarili()
+        private void InsertApprovalRecord(List<TableViewModel> parameterIds, string approvalStatus)
         {
-            return View(); // Başarılı işlem sonrası görüntülenecek view
+            string connectionString = _configuration.GetConnectionString("OracleDbConnection");
+            //connectionString = 
+
+            using (var connection = new OracleConnection(connectionString))
+            {
+                connection.Open();
+
+                foreach (var parameter in parameterIds)
+                {
+                    string selectQuery = @"SELECT COUNT(*) FROM ZZZT_QUALITY_FORMS_ANSWERS
+                                            WHERE SURVEY_ID = :surveyId
+                                            AND FLOOR_ID = :floorId";
+                    using (var selectCommand = new OracleCommand(selectQuery, connection))
+                    {
+                        selectCommand.Parameters.Add(new OracleParameter("surveyId", parameter.QualityControlDefId));
+                        selectCommand.Parameters.Add(new OracleParameter("floorId", parameter.ProjectBlockDefDId));
+
+                        int recordCount = Convert.ToInt32(selectCommand.ExecuteScalar());
+
+                        if(recordCount > 0)
+                        {
+                            string updateQuery = @"UPDATE ZZZT_QUALITY_FORMS_ANSWERS
+                                                   SET DESCRIPTION = :description
+                                                   WHERE SURVEY_ID =:surveyId
+                                                   AND FLOOR_ID = :floorId";
+                            using (var updateCommand = new OracleCommand(updateQuery, connection))
+                            {
+                                updateCommand.Parameters.Add(new OracleParameter("description", approvalStatus));
+                                updateCommand.Parameters.Add(new OracleParameter("surveyId", parameter.QualityControlDefId));
+                                updateCommand.Parameters.Add(new OracleParameter("floorId", parameter.ProjectBlockDefDId));
+
+                                updateCommand.ExecuteNonQuery();
+                            }
+                        }
+                        else
+                        {
+                            string query = @"INSERT INTO ZZZT_QUALITY_FORMS_ANSWERS (QUESTION_ID,
+                                        SURVEY_ID,
+                                        FLOOR_ID,
+                                        DESCRIPTION,
+                                        US_ID,
+                                        PROJECT_ID,
+                                        CO_ID,
+                                        QUALITY_CONTROL_DEF_ID,
+                                        PROJECT_BLOCK_DEF_ID,
+                                        CREATE_DATE)
+                                 VALUES (:questionId,
+                                         :surveyId,
+                                         :floorId,
+                                         :description,
+                                         :usId,
+                                         :projectMId,
+                                         :coId,
+                                         :qualityControlDefId,
+                                         :projectBlockDefId,
+                                          SYSDATE)";
+                            //SYSDATE
+                            using (var command = new OracleCommand(query, connection))
+                            {
+                                command.Parameters.Add(new OracleParameter("questionId", parameter.QuestionId));
+                                command.Parameters.Add(new OracleParameter("surveyId", parameter.QualityControlDefId));
+                                command.Parameters.Add(new OracleParameter("floorId", parameter.ProjectBlockDefDId));
+                                command.Parameters.Add(new OracleParameter("description", approvalStatus));
+                                command.Parameters.Add(new OracleParameter("usId", parameter.UsId));
+                                command.Parameters.Add(new OracleParameter("projectMId", parameter.ProjectMId));
+                                command.Parameters.Add(new OracleParameter("coId", parameter.CoId));
+                                command.Parameters.Add(new OracleParameter("qualityControlDefId", parameter.QualityControlDefId));
+                                command.Parameters.Add(new OracleParameter("projectBlockDefId", parameter.ProjectBlockDefId));
+
+                                command.ExecuteNonQuery();
+                            }
+                        }
+                    }
+                }
+            }
         }
-
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        //[HttpGet]
-        //public IActionResult GetCategory4Data(int parentId)
-        //{
-        //    var connectionString = _configuration.GetConnectionString("OracleDbConnection");
-        //    OracleDataAccess da = new OracleDataAccess(connectionString);
-
-        //    var category4Data = da.GetCategory4(parentId);
-        //    return Json(category4Data);
-        //}
-        //public IActionResult Company()
-        //{
-        //    var connectionString = _configuration.GetConnectionString("OracleDbConnection");
-        //    OracleDataAccess da = new OracleDataAccess(connectionString);
-        //    var company = da.GetCompany();
-
-        //    return View(company);
-        //}
-
-        //public IActionResult Category1()
-        //{
-        //    var connectionString = _configuration.GetConnectionString("OracleDbConnection");
-        //    OracleDataAccess da = new OracleDataAccess(connectionString);
-        //    var category1 = da.GetCategory1();
-
-        //    return View(category1);
-        //}
-
     }
 }

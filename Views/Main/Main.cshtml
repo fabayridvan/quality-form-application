@@ -1,0 +1,235 @@
+﻿@model QuailtyForm.ViewModels.CombinedViewModel
+
+@{
+    var projectAndCompany = ViewData["ProjectAndCompany"] as List<string> ?? new List<string>();
+    var formName = ViewData["FormNameData"] as List<string> ?? new List<string>();
+    var blockAndFloor = ViewData["BlockAndFloorData"] as List<string> ?? new List<string>();
+
+    var approvalStatus = ViewData["ApprovalStatus"] as List<string> ?? new List<string>();
+
+    var filterProject = ViewData["FilterProject"] as string ?? "";
+    var filterFormName = ViewData["FilterFormName"] as string ?? "";
+    var filterBlockAndFloor = ViewData["FilterBlockAndFloor"] as string ?? "";
+    var filterApprovalStatus = ViewData["FilterApprovalStatus"] as string ?? "";
+
+    var uniqueApprovalStatuses = new HashSet<string>(approvalStatus);
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link href="~/css/my.css" rel="stylesheet" />
+    <link href="~/css/switch.css" rel="stylesheet" />
+    <link href="~/css/select.css" rel="stylesheet" />
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.8/js/select2.min.js" defer></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.x.x/js/bootstrap.min.js"></script>
+
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background: -moz-linear-gradient(0deg, rgba(74,63,146,1) 0%, rgba(156,63,146,1) 100%);
+            color: white;
+            text-align: center;
+            background-color: #f2f2f2;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+
+        td {
+            text-align: left;
+        }
+
+        .filter-form {
+            margin-bottom: 20px;
+        }
+
+        .table-responsive {
+            border-radius: 4px;
+        }
+
+        .imgcenter {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            width: 50%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="~/Logo Dikey Medium-Mor.png" alt="Company Logo" style="max-width: 200px;" class="imgcenter"> <!-- Adjust the size as needed -->
+        <form class="filter-form" method="get" action="">
+            <div class="form-group">
+                <h3>Firma ve Proje</h3>
+                <select id="projectandcompany" name="projectandcompany" style="width: 100%;" onchange="getFormName()">
+                    <option value="">Tümü</option>
+                    @foreach (var project in projectAndCompany)
+                    {
+                        @Html.Raw($"<option value='{project}' {(project == filterProject ? "selected" : "")}>{project}</option>")
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <h3>Form Adı</h3>
+                <select id="formname" name="formname" style="width: 100%;" onchange="getBlockAndFloor()">
+                    <option value="">Tümü</option>
+                    @foreach (var form in formName)
+                    {
+                        @Html.Raw($"<option value='{form}' {(form == filterFormName ? "selected" : "")}>{form}</option>")
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <h3>Kat - Blok</h3>
+                <select id="blockandfloor" name="blockandfloor" style="width: 100%;">
+                    <option value="">Tümü</option>
+                    @foreach (var block in blockAndFloor)
+                    {
+                        @Html.Raw($"<option value='{block}' {(block == filterBlockAndFloor ? "selected" : "")}>{block}</option>")
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <h3>Onay Durumu</h3>
+                <select class="form-control select2" id="approvalStatus" name="approvalStatus" style="width: 100%;">
+                    <option value="">Tümü</option>
+                    @foreach (var status in uniqueApprovalStatuses)
+                    {
+                        var displayStatus = status == "Onaylanmış" ? "Onaylanmış" : "Onaylanmamış";
+                        @Html.Raw($"<option value='{status}' {(status == filterApprovalStatus ? "selected" : "")}>{displayStatus}</option>")
+                    }
+                </select>
+            </div>
+            <div style="flex-basis: 100%; ">
+                <button type="submit" class="placeholder-wave">Listele</button>
+                <button type="button" onclick="resetFilters()">Temizle</button>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Firma - Proje</th>
+                            <th>Form</th>
+                            <th>Blok - Kat</th>
+                            <th>Onay Durumu</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var table in Model.MainPage.Tables)
+                        {
+                            <tr>
+                                <td>@table.ProjectAndCompany</td>
+                                <td>@table.FormName</td>
+                                <td>@table.BlockAndFloor</td>
+                                <td>
+                                    @if (table.ApprovalStatus == "accept")
+                                    {
+                                        table.ApprovalStatus = "Onaylanmış";
+                                    }
+                                    @if(table.ApprovalStatus == "reject")
+                                    {
+                                        table.ApprovalStatus = "Onaylanmamış";
+                                    }
+                                    @table.ApprovalStatus
+                                </td>
+                                <td style="text-align:center;">
+                                    @if (table.ApprovalStatus == null)
+                                    {
+                                        <button type="button" class="btn btn-success btn-md btn-block" onclick="goToForm('@table.ProjectAndCompany', '@table.FormName', '@table.BlockAndFloor', '@table.ApprovalStatus','@table.QualityControlDefId', '@table.ProjectBlockDefDId', '@table.CategoriesId')">Giriş</button>
+                                    }
+                                    else if (table.ApprovalStatus == "Onaylanmamış")
+                                    {
+                                        <button type="button" class="btn btn-warning btn-md btn-block" onclick="goToFormUpdate('@table.ProjectAndCompany', '@table.FormName', '@table.BlockAndFloor', '@table.ApprovalStatus','@table.QualityControlDefId', '@table.ProjectBlockDefDId', '@table.CategoriesId')">Güncelle</button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            $('#projectandcompany').select2();
+            $('#formname').select2();
+            $('#blockandfloor').select2();
+            $('#approvalStatus').select2();
+        });
+
+        function getBlockAndFloor() {
+            var formName = $('#formname').val();
+            if (formName) {
+                $.ajax({
+                    url: '@Url.Action("GetBlockAndFloor", "Main")',
+                    type: 'GET',
+                    data: { formName: formName },
+                    success: function (data) {
+                        var blockAndFloorDropdown = $('#blockandfloor');
+                        blockAndFloorDropdown.empty();
+                        blockAndFloorDropdown.append('<option value="">Tümü</option>');
+                        $.each(data, function (index, item) {
+                            blockAndFloorDropdown.append('<option value="' + item + '">' + item + '</option>');
+                        });
+                    }
+                });
+            } else {
+                $('#blockandfloor').empty();
+                $('#blockandfloor').append('<option value="">Tümü</option>');
+            }
+        }
+
+        function getFormName() {
+            var projectAndCompany = $('#projectandcompany').val();
+            if (projectAndCompany) {
+                $.ajax({
+                    url: '@Url.Action("GetFormName", "Main")',
+                    type: 'GET',
+                    data: { projectAndCompany: projectAndCompany },
+                    success: function (data) {
+                        var formNameDropdown = $('#formname');
+                        formNameDropdown.empty();
+                        formNameDropdown.append('<option value="">Tümü</option>');
+                        $.each(data, function (index, item) {
+                            formNameDropdown.append('<option value="' + item + '">' + item + '</option>');
+                        });
+                    }
+                });
+            } else {
+                $('#formname').empty();
+                $('#formname').append('<option value="">Tümü</option>');
+            }
+        }
+        function resetFilters() {
+            $('#projectandcompany').val('').trigger('change');
+            $('#formname').val('').trigger('change');
+            $('#blockandfloor').val('').trigger('change');
+            $('#approvalStatus').val('').trigger('change');
+        }
+        function goToFormUpdate(projectAndCompany, formName, blockAndFloor, approvalStatus, qualityControlDefId, projectBlockDefDId, categoriesId) {
+            window.location.href = '@Url.Action("Index", "Form")' + '?projectAndCompany=' + encodeURIComponent(projectAndCompany) + '&formName=' + encodeURIComponent(formName) + '&blockAndFloor=' + encodeURIComponent(blockAndFloor) + '&approvalStatus=' + encodeURIComponent(approvalStatus) + '&qualityControlDefId=' + encodeURIComponent(qualityControlDefId) + '&projectBlockDefDId=' + encodeURIComponent(projectBlockDefDId) + '&categoriesId=' + encodeURIComponent(categoriesId)
+        }
+        function goToForm(projectAndCompany, formName, blockAndFloor, approvalStatus, qualityControlDefId, projectBlockDefDId, categoriesId) {
+            window.location.href = '@Url.Action("Index", "Form")' + '?projectAndCompany=' + encodeURIComponent(projectAndCompany) + '&formName=' + encodeURIComponent(formName) + '&blockAndFloor=' + encodeURIComponent(blockAndFloor) + '&approvalStatus=' + encodeURIComponent(approvalStatus) + '&qualityControlDefId=' + encodeURIComponent(qualityControlDefId) + '&projectBlockDefDId=' + encodeURIComponent(projectBlockDefDId) + '&categoriesId=' + encodeURIComponent(categoriesId)
+        }
+    </script>
+</body>
+</html>
