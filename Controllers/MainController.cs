@@ -94,6 +94,7 @@ namespace QuailtyForm.Controllers
                                        LEFT JOIN ZZZT_QUALITY_FORMS_ANSWERS QFA
                                            ON     QFA.QUALITY_CONTROL_DEF_ID = QCF.QUALITY_CONTROL_DEF_ID and QFA.US_ID = US.US_ID
                                               AND PDD.PROJECT_BLOCK_DEF_D_ID = QFA.FLOOR_ID
+                                              AND QFA.US_ID = US.US_ID
                                WHERE US.US_USERNAME = :username";
 
                 if (!string.IsNullOrEmpty(projectAndCompanyFilter))
