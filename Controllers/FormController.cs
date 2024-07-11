@@ -242,11 +242,13 @@ namespace QuailtyForm.Controllers
                 {
                     string selectQuery = @"SELECT COUNT(*) FROM ZZZT_QUALITY_FORMS_ANSWERS
                                             WHERE SURVEY_ID = :surveyId
-                                            AND FLOOR_ID = :floorId";
+                                            AND FLOOR_ID = :floorId
+                                            AND US_ID = : usId";
                     using (var selectCommand = new OracleCommand(selectQuery, connection))
                     {
                         selectCommand.Parameters.Add(new OracleParameter("surveyId", parameter.QualityControlDefId));
                         selectCommand.Parameters.Add(new OracleParameter("floorId", parameter.ProjectBlockDefDId));
+                        selectCommand.Parameters.Add(new OracleParameter("usId", parameter.UsId));
 
                         int recordCount = Convert.ToInt32(selectCommand.ExecuteScalar());
 
