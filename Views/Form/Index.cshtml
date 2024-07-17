@@ -1,4 +1,4 @@
-﻿@model QuailtyForm.ViewModels.FormDetailsViewModel
+@model QuailtyForm.ViewModels.FormDetailsViewModel
 
 <!DOCTYPE html>
 <html lang="en">
@@ -94,6 +94,11 @@
                     <input type="radio" name="approval" value="reject" /> Reddet
                 </label>
             </div>
+        </div>
+
+        <div>
+            <h3>Açıklama</h3>
+            <textarea name="comments" rows="4" cols="50" placeholder="Bir Açıklama Yazınız..."></textarea>
         </div>
 
         @* Hidden fields for qualityControlDefId and projectBlockDefDId *@
