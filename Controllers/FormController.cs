@@ -214,11 +214,11 @@ namespace QuailtyForm.Controllers
         public IActionResult SubmitApproval(string approval, int qualityControlDefId, int projectBlockDefDId)
         {
             string userName = HttpContext.Session.GetString("User");
-            var parameterIds = GetAllParametersIds(userName, qualityControlDefId, projectBlockDefDId);
-
+             var parameterIds = GetAllParametersIds(userName, qualityControlDefId, projectBlockDefDId);
+             
             try
             {
-                InsertApprovalRecord(parameterIds, approval);
+                InsertApprovalRecord(parameterIds, approval, comments);
                 return RedirectToAction("Index");
             }
             catch (Exception ex)
@@ -228,86 +228,92 @@ namespace QuailtyForm.Controllers
                 return RedirectToAction("Index");
             }
         }
+    private void InsertApprovalRecord(List<TableViewModel> parameterIds, string approvalStatus, string comments)
+{
+    string connectionString = _configuration.GetConnectionString("OracleDbConnection");
 
-        private void InsertApprovalRecord(List<TableViewModel> parameterIds, string approvalStatus)
+    using (var connection = new OracleConnection(connectionString))
+    {
+        connection.Open();
+
+        foreach (var parameter in parameterIds)
         {
-            string connectionString = _configuration.GetConnectionString("OracleDbConnection");
-            //connectionString = 
+            string selectQuery = @"SELECT COUNT(*) FROM ZZZT_QUALITY_FORMS_ANSWERS
+                                    WHERE SURVEY_ID = :surveyId
+                                    AND FLOOR_ID = :floorId
+                                    AND US_ID = :usId";
 
-            using (var connection = new OracleConnection(connectionString))
+            using (var selectCommand = new OracleCommand(selectQuery, connection))
             {
-                connection.Open();
+                selectCommand.Parameters.Add(new OracleParameter("surveyId", parameter.QualityControlDefId));
+                selectCommand.Parameters.Add(new OracleParameter("floorId", parameter.ProjectBlockDefDId));
+                selectCommand.Parameters.Add(new OracleParameter("usId", parameter.UsId));
 
-                foreach (var parameter in parameterIds)
+                int recordCount = Convert.ToInt32(selectCommand.ExecuteScalar());
+
+                if (recordCount > 0)
                 {
-                    string selectQuery = @"SELECT COUNT(*) FROM ZZZT_QUALITY_FORMS_ANSWERS
-                                            WHERE SURVEY_ID = :surveyId
-                                            AND FLOOR_ID = :floorId
-                                            AND US_ID = : usId";
-                    using (var selectCommand = new OracleCommand(selectQuery, connection))
+                    string updateQuery = @"UPDATE ZZZT_QUALITY_FORMS_ANSWERS
+                                           SET DESCRIPTION = :description, COMMENTS = :comments
+                                           WHERE SURVEY_ID = :surveyId
+                                           AND FLOOR_ID = :floorId";
+
+                    using (var updateCommand = new OracleCommand(updateQuery, connection))
                     {
-                        selectCommand.Parameters.Add(new OracleParameter("surveyId", parameter.QualityControlDefId));
-                        selectCommand.Parameters.Add(new OracleParameter("floorId", parameter.ProjectBlockDefDId));
-                        selectCommand.Parameters.Add(new OracleParameter("usId", parameter.UsId));
+                        updateCommand.Parameters.Add(new OracleParameter("description", approvalStatus));
+                        updateCommand.Parameters.Add(new OracleParameter("comments", comments));
+                        updateCommand.Parameters.Add(new OracleParameter("surveyId", parameter.QualityControlDefId));
+                        updateCommand.Parameters.Add(new OracleParameter("floorId", parameter.ProjectBlockDefDId));
 
-                        int recordCount = Convert.ToInt32(selectCommand.ExecuteScalar());
+                        updateCommand.ExecuteNonQuery();
+                    }
+                }
+                else
+                {
+                    string insertQuery = @"INSERT INTO ZZZT_QUALITY_FORMS_ANSWERS (QUESTION_ID,
+                                    SURVEY_ID,
+                                    FLOOR_ID,
+                                    DESCRIPTION,
+                                    US_ID,
+                                    PROJECT_ID,
+                                    CO_ID,
+                                    QUALITY_CONTROL_DEF_ID,
+                                    PROJECT_BLOCK_DEF_ID,
+                                    COMMENTS,
+                                    CREATE_DATE)
+                             VALUES (:questionId,
+                                     :surveyId,
+                                     :floorId,
+                                     :description,
+                                     :usId,
+                                     :projectMId,
+                                     :coId,
+                                     :qualityControlDefId,
+                                     :projectBlockDefId,
+                                     :comments,
+                                      SYSDATE)";
 
-                        if(recordCount > 0)
-                        {
-                            string updateQuery = @"UPDATE ZZZT_QUALITY_FORMS_ANSWERS
-                                                   SET DESCRIPTION = :description
-                                                   WHERE SURVEY_ID =:surveyId
-                                                   AND FLOOR_ID = :floorId";
-                            using (var updateCommand = new OracleCommand(updateQuery, connection))
-                            {
-                                updateCommand.Parameters.Add(new OracleParameter("description", approvalStatus));
-                                updateCommand.Parameters.Add(new OracleParameter("surveyId", parameter.QualityControlDefId));
-                                updateCommand.Parameters.Add(new OracleParameter("floorId", parameter.ProjectBlockDefDId));
+                    using (var insertCommand = new OracleCommand(insertQuery, connection))
+                    {
+                        insertCommand.Parameters.Add(new OracleParameter("questionId", parameter.QuestionId));
+                        insertCommand.Parameters.Add(new OracleParameter("surveyId", parameter.QualityControlDefId));
+                        insertCommand.Parameters.Add(new OracleParameter("floorId", parameter.ProjectBlockDefDId));
+                        insertCommand.Parameters.Add(new OracleParameter("description", approvalStatus));
+                        insertCommand.Parameters.Add(new OracleParameter("usId", parameter.UsId));
+                        insertCommand.Parameters.Add(new OracleParameter("projectMId", parameter.ProjectMId));
+                        insertCommand.Parameters.Add(new OracleParameter("coId", parameter.CoId));
+                        insertCommand.Parameters.Add(new OracleParameter("qualityControlDefId", parameter.QualityControlDefId));
+                        insertCommand.Parameters.Add(new OracleParameter("projectBlockDefId", parameter.ProjectBlockDefId));
+                        insertCommand.Parameters.Add(new OracleParameter("comments", comments));
 
-                                updateCommand.ExecuteNonQuery();
-                            }
-                        }
-                        else
-                        {
-                            string query = @"INSERT INTO ZZZT_QUALITY_FORMS_ANSWERS (QUESTION_ID,
-                                        SURVEY_ID,
-                                        FLOOR_ID,
-                                        DESCRIPTION,
-                                        US_ID,
-                                        PROJECT_ID,
-                                        CO_ID,
-                                        QUALITY_CONTROL_DEF_ID,
-                                        PROJECT_BLOCK_DEF_ID,
-                                        CREATE_DATE)
-                                 VALUES (:questionId,
-                                         :surveyId,
-                                         :floorId,
-                                         :description,
-                                         :usId,
-                                         :projectMId,
-                                         :coId,
-                                         :qualityControlDefId,
-                                         :projectBlockDefId,
-                                          SYSDATE)";
-                            //SYSDATE
-                            using (var command = new OracleCommand(query, connection))
-                            {
-                                command.Parameters.Add(new OracleParameter("questionId", parameter.QuestionId));
-                                command.Parameters.Add(new OracleParameter("surveyId", parameter.QualityControlDefId));
-                                command.Parameters.Add(new OracleParameter("floorId", parameter.ProjectBlockDefDId));
-                                command.Parameters.Add(new OracleParameter("description", approvalStatus));
-                                command.Parameters.Add(new OracleParameter("usId", parameter.UsId));
-                                command.Parameters.Add(new OracleParameter("projectMId", parameter.ProjectMId));
-                                command.Parameters.Add(new OracleParameter("coId", parameter.CoId));
-                                command.Parameters.Add(new OracleParameter("qualityControlDefId", parameter.QualityControlDefId));
-                                command.Parameters.Add(new OracleParameter("projectBlockDefId", parameter.ProjectBlockDefId));
-
-                                command.ExecuteNonQuery();
-                            }
-                        }
+                        insertCommand.ExecuteNonQuery();
                     }
                 }
             }
         }
+    }
+}
+
+        
     }
 }
